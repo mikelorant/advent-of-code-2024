@@ -34,12 +34,12 @@ func Task(file string, part int) int {
 func sumDiff(lists []List) int {
 	var sum int
 
-	for idx, l := range lists {
-		lists[idx] = sortList(l)
+	for _, l := range lists {
+		sort.Ints(l)
 	}
 
-	for idx := range len(lists[0]) {
-		sum += diff(lists[0][idx], lists[1][idx])
+	for idx, l := range lists[0] {
+		sum += diff(l, lists[1][idx])
 	}
 
 	return sum
@@ -53,14 +53,6 @@ func simScore(lists []List) int {
 	}
 
 	return sum
-}
-
-func sortList(l List) List {
-	sort.Slice(l, func(i, j int) bool {
-		return l[i] < l[j]
-	})
-
-	return l
 }
 
 func diff(i, j int) int {
@@ -77,7 +69,7 @@ func count(val int, l List) int {
 
 	for _, v := range l {
 		if v == val {
-			i += 1
+			i++
 		}
 	}
 
