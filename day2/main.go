@@ -6,8 +6,8 @@ import (
 )
 
 type (
-	Reports []Report
-	Report  []int
+	Reports   []Report
+	Report    []int
 	Direction int
 )
 
@@ -46,7 +46,7 @@ func check(reps Reports, damp bool) int {
 	var cnt int
 
 	for _, rep := range reps {
-		if safe(rep) {
+		if isSafe(rep) {
 			cnt++
 
 			continue
@@ -57,7 +57,7 @@ func check(reps Reports, damp bool) int {
 		}
 
 		for idx := range rep {
-			if safe(remove(rep, idx)) {
+			if isSafe(remove(rep, idx)) {
 				cnt++
 
 				break
@@ -68,9 +68,7 @@ func check(reps Reports, damp bool) int {
 	return cnt
 }
 
-func safe(rep Report) bool {
-	dir := direction(rep)
-
+func isSafe(rep Report) bool {
 	for idx, lvl := range rep {
 		if idx == 0 {
 			continue
@@ -79,7 +77,7 @@ func safe(rep Report) bool {
 		prevLvl := rep[idx-1]
 
 		diff := lvl - prevLvl
-		if dir == Descending {
+		if direction(rep) == Descending {
 			diff = -diff
 		}
 
