@@ -6,16 +6,8 @@ import (
 )
 
 type (
-	Reports   []Report
-	Report    []int
-	Direction int
-)
-
-const (
-	Unknown Direction = iota
-	Descending
-	Ascending
-	Flat
+	Reports []Report
+	Report  []int
 )
 
 func main() {
@@ -69,50 +61,30 @@ func check(reps Reports, damp bool) int {
 }
 
 func isSafe(rep Report) bool {
-	for idx, lvl := range rep {
-		if idx == 0 {
-			continue
+	if slices.IsSorted(rep) && isAdjacent(rep) {
+		return true
+	}
+
+	slices.Reverse(rep)
+
+	if slices.IsSorted(rep) && isAdjacent(rep) {
+		return true
+	}
+
+	return false
+}
+
+func isAdjacent(rep Report) bool {
+	for idx, lvl := range rep[1:] {
+		diff := lvl - rep[idx]
+		if diff < 1 || diff > 3 {
+			return false
 		}
-
-		prevLvl := rep[idx-1]
-
-		diff := lvl - prevLvl
-		if direction(rep) == Descending {
-			diff = -diff
-		}
-
-		if diff > 0 && diff <= 3 {
-			continue
-		}
-
-		return false
 	}
 
 	return true
 }
 
-func direction(rep Report) Direction {
-	for idx, lvl := range rep {
-		if idx == 0 {
-			continue
-		}
-
-		prevLvl := rep[idx-1]
-
-		switch {
-		case lvl < prevLvl:
-			return Descending
-		case lvl > prevLvl:
-			return Ascending
-		}
-	}
-
-	return Flat
-}
-
 func remove(rep Report, idx int) Report {
-	r := make(Report, len(rep))
-	copy(r, rep)
-
-	return slices.Delete(r, idx, idx+1)
+	return slices.Delete(slices.Clone(rep), idx, idx+1)
 }
