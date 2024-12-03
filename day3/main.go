@@ -21,32 +21,24 @@ func Task(r io.Reader, part int) int {
 
 	switch part {
 	case 1:
-		return sum(cmds, false)
+		return sum(cmds)
 	case 2:
-		return sum(cmds, true)
+		return sum(filter(cmds))
 	}
 
 	return 0
 }
 
-func sum(cmds Commands, cond bool) int {
-	if cond {
-		cmds = filter(cmds)
-	}
-
-	return scan(cmds)
-}
-
-func scan(cmds []int) int {
-	var sum int
+func sum(cmds Commands) int {
+	var val int
 
 	for _, i := range cmds {
 		if i > 0 {
-			sum += i
+			val += i
 		}
 	}
 
-	return sum
+	return val
 }
 
 func filter(cmds Commands) Commands {
