@@ -6,6 +6,51 @@ import (
 	"strings"
 )
 
+type (
+	Grid []Row
+	Row  []Cell
+)
+
+type Cell struct {
+	Value      string
+	Neighbours Neighbours
+}
+
+type Neighbours struct {
+	TopLeft     *Cell
+	Top         *Cell
+	TopRight    *Cell
+	Left        *Cell
+	Right       *Cell
+	BottomLeft  *Cell
+	Bottom      *Cell
+	BottomRight *Cell
+}
+
+type Direction int
+
+type Adjacent struct {
+	Cell      *Cell
+	Direction Direction
+}
+
+var (
+	xmas = []string{"X", "M", "A", "S"}
+	mas  = []string{"M", "A", "S"}
+)
+
+const (
+	Undefined Direction = iota
+	TopLeft
+	Top
+	TopRight
+	Left
+	Right
+	BottomLeft
+	Bottom
+	BottomRight
+)
+
 func main() {
 	i := Task("input1.txt", 1)
 	log.Println("Part 1:", i)
@@ -14,199 +59,176 @@ func main() {
 	log.Println("Part 2:", j)
 }
 
-type (
-	Grid []Row
-	Row  []string
-)
-
 func Task(file string, part int) int {
-	grid, err := parse(file)
+	filter := xmas
+	if part == 2 {
+		filter = mas
+	}
+
+	grid, err := parse(file, filter)
 	if err != nil {
 		log.Fatal("unable to parse file:", err.Error())
 	}
 
 	switch part {
 	case 1:
-		return search(grid)
+		return searchXMAS(grid)
 	case 2:
-		return 0
+		return searchMAS(grid)
 	}
 
 	return 0
+}
+
+func searchXMAS(g Grid) int {
+	var count int
+
+	for _, x := range candidates(g, "X") {
+		ms := checkAll(x, "M")
+
+		for _, m := range ms {
+			a := check(*m.Cell, "A", m.Direction)
+			if a == nil {
+				continue
+			}
+
+			s := check(*a, "S", m.Direction)
+			if s == nil {
+				continue
+			}
+
+			count++
+		}
+	}
+
+	return count
+}
+
+func searchMAS(g Grid) int {
+	var count int
+
+	for _, a := range candidates(g, "A") {
+		if checkDiagonals(a) {
+			count++
+		}
+	}
+
+	return count
+}
+
+func candidates(g Grid, str string) []Cell {
+	var res []Cell
+
+	for _, row := range g {
+		for _, cell := range row {
+			if cell.Value == str {
+				res = append(res, cell)
+			}
+		}
+	}
+
+	return res
+}
+
+func checkAll(cell Cell, str string) []Adjacent {
+	var adjs []Adjacent
+
+	all := []Direction{TopLeft, Top, TopRight, Left, Right, BottomLeft, Bottom, BottomRight}
+
+	for _, dir := range all {
+		res := check(cell, str, dir)
+		if res == nil {
+			continue
+		}
+
+		adj := Adjacent{
+			Cell:      res,
+			Direction: dir,
+		}
+
+		adjs = append(adjs, adj)
+	}
+
+	return adjs
+}
+
+func checkDiagonals(cell Cell) bool {
+	var count int
+
+	diagonals := []Direction{TopLeft, TopRight, BottomLeft, BottomRight}
+
+	for _, dir := range diagonals {
+		if check(cell, "M", dir) == nil {
+			continue
+		}
+
+		if check(cell, "S", opposite(dir)) == nil {
+			continue
+		}
+
+		count++
+	}
+
+	return count == 2
+}
+
+func check(cell Cell, str string, dir Direction) *Cell {
+	adj := adjacent(cell, dir)
+	if adj == nil || adj.Value != str {
+		return nil
+	}
+
+	return adj
+}
+
+func adjacent(cell Cell, d Direction) *Cell {
+	switch d {
+	case TopLeft:
+		return cell.Neighbours.TopLeft
+	case Top:
+		return cell.Neighbours.Top
+	case TopRight:
+		return cell.Neighbours.TopRight
+	case Left:
+		return cell.Neighbours.Left
+	case Right:
+		return cell.Neighbours.Right
+	case BottomLeft:
+		return cell.Neighbours.BottomLeft
+	case Bottom:
+		return cell.Neighbours.Bottom
+	case BottomRight:
+		return cell.Neighbours.BottomRight
+	}
+
+	return &cell
+}
+
+func opposite(d Direction) Direction {
+	switch d {
+	case TopLeft:
+		return BottomRight
+	case TopRight:
+		return BottomLeft
+	case BottomLeft:
+		return TopRight
+	case BottomRight:
+		return TopLeft
+	}
+
+	return d
 }
 
 func (g Grid) String() string {
 	var sb strings.Builder
 
 	for _, row := range g {
-		fmt.Fprintln(&sb, strings.Join(row, ""))
+		for _, cell := range row {
+			fmt.Fprintf(&sb, "%v", cell.Value)
+		}
+
+		fmt.Fprintln(&sb, "")
 	}
 
 	return sb.String()
-}
-
-func search(g Grid) int {
-	x := find(g, "X")
-	s := find(g, "S")
-
-	var paths [][][]int
-
-	for _, i := range x {
-		for _, j := range s {
-			paths = append(paths, path(i, j))
-		}
-	}
-
-	var res [][][]int
-	for _, p := range paths {
-		if isValid(g, p) {
-			res = append(res, p)
-		}
-	}
-
-	return len(res)
-}
-
-func path(a, b []int) [][]int {
-	var res [][]int
-
-	ranges := connect(a, b)
-
-	for idx := range steps(ranges[0], ranges[1]) {
-		res = append(res, []int{
-			next(ranges[0], idx),
-			next(ranges[1], idx),
-		})
-	}
-
-	return res
-}
-
-func find(g Grid, str string) [][]int {
-	var loc [][]int
-
-	for y, row := range g {
-		for x, char := range row {
-			if char == str {
-				loc = append(loc, []int{y, x})
-			}
-		}
-	}
-
-	return loc
-}
-
-func connect(i, j []int) [][]int {
-	var res [][]int
-
-	res = append(res, between(i[0], j[0]))
-	res = append(res, between(i[1], j[1]))
-
-	return res
-}
-
-func between(a, b int) []int {
-	var res []int
-
-	for i := a; i != b; i = nextInt(i, b) {
-		res = append(res, i)
-	}
-	res = append(res, b)
-
-	return res
-}
-
-func nextInt(i, j int) int {
-	switch {
-	case i < j:
-		return i + 1
-	case i > j:
-		return i - 1
-	default:
-		return i
-	}
-}
-
-func steps(i, j []int) int {
-	if len(i) > len(j) {
-		return len(i)
-	}
-
-	return len(j)
-}
-
-func next(nums []int, idx int) int {
-	if idx >= len(nums) {
-		return nums[len(nums)-1]
-	}
-
-	return nums[idx]
-}
-
-func isValid(g Grid, points [][]int) bool {
-	// Correct length
-	if len(points) != 4 {
-		return false
-	}
-
-	// Within bounds
-	for _, point := range points {
-		if point[0] < 0 || point[1] < 0 {
-			return false
-		}
-
-		if point[0] > len(g) || point[0] > len(g[0]) {
-			return false
-		}
-	}
-
-	// Correct letters
-	for idx := range 4 {
-		y := points[idx][0]
-		x := points[idx][1]
-
-		switch idx {
-		case 0:
-			if g[y][x] != "X" {
-				return false
-			}
-		case 1:
-			if g[y][x] != "M" {
-				return false
-			}
-		case 2:
-			if g[y][x] != "A" {
-				return false
-			}
-		case 3:
-			if g[y][x] != "S" {
-				return false
-			}
-		}
-	}
-
-	// Correct direction
-	xy := points[0][0]
-	xx := points[0][1]
-
-	sy := points[3][0]
-	sx := points[3][1]
-
-	if !(abs(xy-sy) == 0 || abs(xy-sy) == 3) {
-		return false
-	}
-
-	if !(abs(xx-sx) == 0 || abs(xx-sx) == 3) {
-		return false
-	}
-
-	return true
-}
-
-func abs(i int) int {
-	if i < 0 {
-		return -i
-	}
-
-	return i
 }
