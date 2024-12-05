@@ -84,15 +84,15 @@ func searchXMAS(g Grid) int {
 	var count int
 
 	for _, x := range candidates(g, "X") {
-		ms := checkAll(x, "M")
+		ms := adjacents(x, "M")
 
 		for _, m := range ms {
-			a := check(*m.Cell, "A", m.Direction)
+			a := lookupAdjacent(*m.Cell, "A", m.Direction)
 			if a == nil {
 				continue
 			}
 
-			s := check(*a, "S", m.Direction)
+			s := lookupAdjacent(*a, "S", m.Direction)
 			if s == nil {
 				continue
 			}
@@ -130,39 +130,17 @@ func candidates(g Grid, str string) []Cell {
 	return res
 }
 
-func checkAll(cell Cell, str string) []Adjacent {
-	var adjs []Adjacent
-
-	all := []Direction{TopLeft, Top, TopRight, Left, Right, BottomLeft, Bottom, BottomRight}
-
-	for _, dir := range all {
-		res := check(cell, str, dir)
-		if res == nil {
-			continue
-		}
-
-		adj := Adjacent{
-			Cell:      res,
-			Direction: dir,
-		}
-
-		adjs = append(adjs, adj)
-	}
-
-	return adjs
-}
-
 func checkDiagonals(cell Cell) bool {
 	var count int
 
 	diagonals := []Direction{TopLeft, TopRight, BottomLeft, BottomRight}
 
 	for _, dir := range diagonals {
-		if check(cell, "M", dir) == nil {
+		if lookupAdjacent(cell, "M", dir) == nil {
 			continue
 		}
 
-		if check(cell, "S", opposite(dir)) == nil {
+		if lookupAdjacent(cell, "S", opposite(dir)) == nil {
 			continue
 		}
 
@@ -172,7 +150,29 @@ func checkDiagonals(cell Cell) bool {
 	return count == 2
 }
 
-func check(cell Cell, str string, dir Direction) *Cell {
+func adjacents(cell Cell, str string) []Adjacent {
+	var adjs []Adjacent
+
+	around := []Direction{TopLeft, Top, TopRight, Left, Right, BottomLeft, Bottom, BottomRight}
+
+	for _, dir := range around {
+		adjCell := lookupAdjacent(cell, str, dir)
+		if adjCell == nil {
+			continue
+		}
+
+		adj := Adjacent{
+			Cell:      adjCell,
+			Direction: dir,
+		}
+
+		adjs = append(adjs, adj)
+	}
+
+	return adjs
+}
+
+func lookupAdjacent(cell Cell, str string, dir Direction) *Cell {
 	adj := adjacent(cell, dir)
 	if adj == nil || adj.Value != str {
 		return nil
