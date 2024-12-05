@@ -64,12 +64,12 @@ func sum(man Manual, s State) int {
 
 func isValid(up Update, rs Rules) bool {
 	for idx, page := range up {
-		for _, val := range rs[page] {
-			if !slices.Contains(up, val) {
+		for _, num := range rs[page] {
+			if !slices.Contains(up, num) {
 				continue
 			}
 
-			if slices.Index(up, val) < idx {
+			if slices.Index(up, num) < idx {
 				return false
 			}
 		}
@@ -79,18 +79,21 @@ func isValid(up Update, rs Rules) bool {
 }
 
 func reorder(up Update, rs Rules) Update {
-START:
 	for idx, page := range up {
+		pos := idx
+
 		for _, num := range rs[page] {
 			if !slices.Contains(up, num) {
 				continue
 			}
 
-			if pos := slices.Index(up, num); pos < idx {
-				move(up, idx, pos)
-
-				goto START
+			if i := slices.Index(up, num); i < pos {
+				pos = i
 			}
+		}
+
+		if pos < idx {
+			move(up, idx, pos)
 		}
 	}
 
