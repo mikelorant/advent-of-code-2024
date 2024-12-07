@@ -29,11 +29,9 @@ func toRow(str string) Row {
 	var row Row
 
 	for _, char := range str {
-		cell := Cell{
+		row = append(row, &Cell{
 			Value: toValue(char),
-		}
-
-		row = append(row, &cell)
+		})
 	}
 
 	return row
@@ -44,7 +42,7 @@ func addNeighbours(g Grid) Grid {
 		for x := range row {
 			cell := g[y][x]
 
-			cell.Neighbours = make(map[Direction]*Cell, 0)
+			cell.Neighbours = make(map[Direction]*Cell, 4)
 			cell.Neighbours[Up] = getCell(g, x, y-1)
 			cell.Neighbours[Left] = getCell(g, x-1, y)
 			cell.Neighbours[Right] = getCell(g, x+1, y)

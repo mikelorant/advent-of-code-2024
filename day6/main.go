@@ -56,7 +56,7 @@ func Task(file string, part int) int {
 
 	switch part {
 	case 1:
-		return steps(cell, Up)
+		return positions(cell, Up)
 	case 2:
 		return 0
 	}
@@ -68,8 +68,6 @@ func guard(g Grid) *Cell {
 	for _, row := range g {
 		for _, cell := range row {
 			if cell.Value == Guard {
-				cell.Visited = true
-
 				return cell
 			}
 		}
@@ -78,23 +76,27 @@ func guard(g Grid) *Cell {
 	return nil
 }
 
-func steps(c *Cell, dir Direction) int {
-	i := 1 // Include the guard's starting cell.
+func positions(c *Cell, dir Direction) int {
+	var i int
 
-	for isCell(c, dir) {
-		c, dir = step(c, dir)
-
+	for c != nil {
 		if !c.Visited {
 			c.Visited = true
 
 			i++
 		}
+
+		c, dir = step(c, dir)
 	}
 
 	return i
 }
 
 func step(c *Cell, d Direction) (*Cell, Direction) {
+	if c.Neighbours[d] == nil {
+		return nil, d
+	}
+
 	if c.Neighbours[d].Value != Obstruction {
 		return c.Neighbours[d], d
 	}
@@ -111,21 +113,6 @@ func step(c *Cell, d Direction) (*Cell, Direction) {
 	}
 
 	return c, d
-}
-
-func isCell(c *Cell, d Direction) bool {
-	switch d {
-	case Up:
-		return c.Neighbours[Up] != nil
-	case Right:
-		return c.Neighbours[Right] != nil
-	case Down:
-		return c.Neighbours[Down] != nil
-	case Left:
-		return c.Neighbours[Left] != nil
-	}
-
-	return false
 }
 
 func (v Value) String() string {
