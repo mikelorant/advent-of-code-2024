@@ -58,7 +58,7 @@ func Task(file string, part int) int {
 	case 1:
 		return positions(cell, Up)
 	case 2:
-		return 0
+		return paradoxes(grid, cell, Up)
 	}
 
 	return 0
@@ -92,27 +92,77 @@ func positions(c *Cell, dir Direction) int {
 	return i
 }
 
+func paradoxes(g Grid, c *Cell, dir Direction) int {
+	var i int
+
+	positions(c, Up)
+
+	size := len(g) * len(g[0])
+
+	for _, row := range g {
+		for _, cell := range row {
+			if !(cell.Visited && cell.Value == Empty) {
+				continue
+			}
+
+			cell.Value = Obstruction
+
+			if isLoop(c, dir, size) {
+				i++
+			}
+
+			cell.Value = Empty
+		}
+	}
+
+	return i
+}
+
+func isLoop(c *Cell, dir Direction, maxIter int) bool {
+	var i int
+
+	for c != nil {
+		c, dir = step(c, dir)
+
+		i++
+
+		if i > maxIter {
+			return true
+		}
+	}
+
+	return false
+}
+
 func step(c *Cell, d Direction) (*Cell, Direction) {
 	if c.Neighbours[d] == nil {
 		return nil, d
 	}
 
-	if c.Neighbours[d].Value != Obstruction {
-		return c.Neighbours[d], d
+	for {
+		if c.Neighbours[d].Value != Obstruction {
+			break
+		}
+
+		d = changeDirection(d)
 	}
 
+	return c.Neighbours[d], d
+}
+
+func changeDirection(d Direction) Direction {
 	switch d {
 	case Up:
-		return c.Neighbours[Right], Right
+		return Right
 	case Right:
-		return c.Neighbours[Down], Down
+		return Down
 	case Down:
-		return c.Neighbours[Left], Left
+		return Left
 	case Left:
-		return c.Neighbours[Up], Up
+		return Up
 	}
 
-	return c, d
+	return d
 }
 
 func (v Value) String() string {
