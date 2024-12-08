@@ -6,10 +6,12 @@ import (
 )
 
 type (
-	Grid    []Row
-	Row     Cells
-	Cells   []*Cell
-	Antenna rune
+	Grid        []Row
+	Row         Cells
+	Antenna     rune
+	Cells       []*Cell
+	Coordinates []Coordinate
+	Harmonics   int
 )
 
 type Cell struct {
@@ -19,14 +21,22 @@ type Cell struct {
 	Antinodes []Antenna
 }
 
-type Antinodes struct {
-	Ax, Ay int
-	Bx, By int
+type Coordinate struct {
+	X int
+	Y int
 }
+
+const (
+	NoHarmonics Harmonics = iota
+	WithHarmonics
+)
 
 func main() {
 	i := Task("input1.txt", 1)
 	log.Println("Part 1:", i)
+
+	j := Task("input1.txt", 2)
+	log.Println("Part 2:", j)
 }
 
 func Task(file string, part int) int {
@@ -39,16 +49,16 @@ func Task(file string, part int) int {
 
 	switch part {
 	case 1:
-		return locations(grid)
+		return locations(grid, NoHarmonics)
 	case 2:
-		return 0
+		return locations(grid, WithHarmonics)
 	}
 
 	return 0
 }
 
-func locations(g Grid) int {
-	g.setAntinodes()
+func locations(g Grid, h Harmonics) int {
+	g.setAntinodes(h)
 
 	return len(g.antinodes())
 }
@@ -89,7 +99,7 @@ func (g Grid) cell(x, y int) *Cell {
 	return g[y][x]
 }
 
-func (g Grid) setAntinodes() {
+func (g Grid) setAntinodes(h Harmonics) {
 	for ant, cells := range g.antennas() {
 		for idx, cell := range cells {
 			if idx >= len(cells) {
@@ -97,61 +107,34 @@ func (g Grid) setAntinodes() {
 			}
 
 			for _, c := range cells[idx+1:] {
-				antis := antinodes(cell, c)
-
-				c1 := g.cell(antis.Ax, antis.Ay)
-				c2 := g.cell(antis.Bx, antis.By)
-
-				if c1 != nil {
-					c1.Antinodes = append(c1.Antinodes, ant)
-				}
-
-				if c2 != nil {
-					c2.Antinodes = append(c2.Antinodes, ant)
+				bound := Coordinate{X: len(g[0]), Y: len(g)}
+				for _, a := range antinodes(cell, c, bound, h) {
+					g.addAntinode(a, ant)
 				}
 			}
 		}
 	}
 }
 
-func antinodes(a, b *Cell) Antinodes {
-	cx, dx := sequence(a.X, b.X)
-	cy, dy := sequence(a.Y, b.Y)
+func (g Grid) addAntinode(coord Coordinate, ant Antenna) bool {
+	cell := g.cell(coord.X, coord.Y)
 
-	return Antinodes{
-		Ax: cx, Ay: cy,
-		Bx: dx, By: dy,
+	if cell == nil {
+		return false
 	}
+
+	cell.Antinodes = append(cell.Antinodes, ant)
+
+	return true
 }
 
-func sequence(i, j int) (int, int) {
-	if i == j {
-		return i, j
+func antinodes(a, b *Cell, bound Coordinate, h Harmonics) Coordinates {
+	cA := toCoord(a)
+	cB := toCoord(b)
+
+	if h == WithHarmonics {
+		return extendAllInclusive(cA, cB, bound)
 	}
 
-	s := abs(i - j)
-
-	s1 := i - s
-	s2 := i + s
-
-	for s1 == i || s1 == j {
-		s1 -= s
-	}
-	for s2 == i || s2 == j {
-		s2 += s
-	}
-
-	if i > j {
-		return s2, s1
-	}
-
-	return s1, s2
-}
-
-func abs(i int) int {
-	if i < 0 {
-		return -i
-	}
-
-	return i
+	return extendBoth(cA, cB)
 }

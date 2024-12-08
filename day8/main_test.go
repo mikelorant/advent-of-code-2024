@@ -33,6 +33,11 @@ func TestTask(t *testing.T) {
 			part: 1,
 			want: 14,
 		},
+		"part2 example1": {
+			file: "example1.txt",
+			part: 2,
+			want: 34,
+		},
 	}
 
 	for name, tt := range tests {
