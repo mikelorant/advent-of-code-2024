@@ -18,7 +18,7 @@ func TestTask(t *testing.T) {
 			part: 1,
 			want: 3749,
 		},
-		"part1 demo2": {
+		"part2 demo1": {
 			file: "demo1.txt",
 			part: 2,
 			want: 11387,
