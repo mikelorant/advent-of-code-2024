@@ -8,6 +8,8 @@ import (
 type (
 	Topography []Row
 	Row        []*Cell
+	Direction  int
+	Trailheads int
 )
 
 type Cell struct {
@@ -15,8 +17,6 @@ type Cell struct {
 	Visited    bool
 	Neighbours map[Direction]*Cell
 }
-
-type Direction int
 
 const (
 	Unset Direction = iota
@@ -26,9 +26,17 @@ const (
 	Left
 )
 
+const (
+	Score Trailheads = iota
+	Ratings
+)
+
 func main() {
 	i := Task(load("input1.txt"), 1)
 	log.Println("Part 1:", i)
+
+	j := Task(load("input1.txt"), 2)
+	log.Println("Part 2:", j)
 }
 
 func Task(r io.Reader, part int) int {
@@ -39,26 +47,23 @@ func Task(r io.Reader, part int) int {
 
 	switch part {
 	case 1:
-		return topo.sum()
+		return topo.sum(Score)
 	case 2:
-		return 0
+		return topo.sum(Ratings)
 	}
 
 	return 0
 }
 
-func (t *Topography) sum() int {
+func (t *Topography) sum(th Trailheads) int {
 	var sum int
-	var cs []*Cell
 
 	for _, c := range t.start() {
-		for {
+		cs := []*Cell{c}
+
+		for len(cs) != 0 {
 			nc := c.next()
 			cs = append(cs, nc...)
-
-			if len(cs) == 0 {
-				break
-			}
 
 			c, cs = cs[len(cs)-1], cs[:len(cs)-1]
 
@@ -66,7 +71,9 @@ func (t *Topography) sum() int {
 				sum++
 			}
 
-			c.Visited = true
+			if th == Score {
+				c.Visited = true
+			}
 		}
 
 		t.reset()

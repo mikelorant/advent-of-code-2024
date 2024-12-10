@@ -78,6 +78,58 @@ func TestTask(t *testing.T) {
 			part: 1,
 			want: 36,
 		},
+		"part2 demo1": {
+			topography: heredoc.Doc(`
+				.....0.
+				..4321.
+				..5..2.
+				..6543.
+				..7..4.
+				..8765.
+				..9....
+			`),
+			part: 2,
+			want: 3,
+		},
+		"part2 demo2": {
+			topography: heredoc.Doc(`
+				..90..9
+				...1.98
+				...2..7
+				6543456
+				765.987
+				876....
+				987....
+			`),
+			part: 2,
+			want: 13,
+		},
+		"part2 demo3": {
+			topography: heredoc.Doc(`
+				012345
+				123456
+				234567
+				345678
+				4.6789
+				56789.
+			`),
+			part: 2,
+			want: 227,
+		},
+		"part2 example1": {
+			topography: heredoc.Doc(`
+				89010123
+				78121874
+				87430965
+				96549874
+				45678903
+				32019012
+				01329801
+				10456732
+			`),
+			part: 2,
+			want: 81,
+		},
 	}
 
 	for name, tt := range tests {
