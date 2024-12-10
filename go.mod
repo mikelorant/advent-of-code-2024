@@ -2,7 +2,10 @@ module github.com/mikelorant/advent-of-code-2024
 
 go 1.23.3
 
-require github.com/stretchr/testify v1.10.0
+require (
+	github.com/MakeNowJust/heredoc v1.0.0
+	github.com/stretchr/testify v1.10.0
+)
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
