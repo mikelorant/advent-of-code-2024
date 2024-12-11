@@ -6,9 +6,14 @@ import (
 	"strconv"
 )
 
+type Stones map[int]int
+
 func main() {
 	i := Task(load("input1.txt"), 25, 1)
 	log.Println("Part 1:", i)
+
+	j := Task(load("input1.txt"), 75, 2)
+	log.Println("Part 2:", j)
 }
 
 func Task(r io.Reader, blinks int, part int) int {
@@ -27,35 +32,49 @@ func Task(r io.Reader, blinks int, part int) int {
 	return 0
 }
 
-func count(stones []int, blinks int) int {
+func count(s Stones, blinks int) int {
 	for range blinks {
-		stones = blink(stones)
+		s = blink(s)
 	}
 
-	return len(stones)
+	var c int
+
+	for _, i := range s {
+		c += i
+	}
+
+	return c
 }
 
-func blink(ss []int) []int {
-	var ints []int
+func blink(s Stones) Stones {
+	ss := make(Stones, 0)
 
-	for _, s := range ss {
-		switch {
-		case s == 0:
-			ints = append(ints, 1)
-		case len(strconv.Itoa(s))%2 == 0:
-			s1, s2 := split(s)
-			ints = append(ints, s1, s2)
-		default:
-			ints = append(ints, s*2024)
+	for num, count := range s {
+		for _, i := range compute(num) {
+			ss[i] += count
 		}
 	}
 
-	return ints
+	return ss
 }
 
-func split(i int) (int, int) {
-	str := strconv.Itoa(i)
-	l := len(str) / 2
+func split(i int) []int {
+	s := strconv.Itoa(i)
+	l := len(s) / 2
 
-	return mustInt(str[:l]), mustInt(str[l:])
+	return []int{
+		mustInt(s[:l]),
+		mustInt(s[l:]),
+	}
+}
+
+func compute(i int) []int {
+	switch {
+	case i == 0:
+		return []int{1}
+	case len(strconv.Itoa(i))%2 == 0:
+		return split(i)
+	default:
+		return []int{i * 2024}
+	}
 }

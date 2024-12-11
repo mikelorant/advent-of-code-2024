@@ -8,13 +8,19 @@ import (
 	"strings"
 )
 
-func parse(r io.Reader) ([]int, error) {
+func parse(r io.Reader) (Stones, error) {
+	stones := make(Stones, 0)
+
 	b, err := io.ReadAll(r)
 	if err != nil {
 		log.Fatalf("unable to read all: %v", err.Error())
 	}
 
-	return mustInts(b), nil
+	for _, i := range mustInts(b) {
+		stones[i]++
+	}
+
+	return stones, nil
 }
 
 func load(file string) io.Reader {
